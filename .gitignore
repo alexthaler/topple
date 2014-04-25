@@ -1,0 +1,7 @@
+src/main/resources/application.properties
+*.iml
+*.ipr
+*.iws
+
+build/
+.gradle/
