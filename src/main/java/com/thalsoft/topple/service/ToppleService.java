@@ -38,57 +38,29 @@ public class ToppleService implements InitializingBean {
         this.jumblrClient = new JumblrClient(consumerKey, consumerSecret);
     }
 
-    public String getRandomPicFromTag(String tag) {
+    public String getRandomPicFromTag(String... tag) {
         List<PhotoPost> picturePosts = getPostsFromTags(tag);
 
         return getRandomUrlFromPosts(picturePosts);
     }
 
-    public String getRandomPicFromBlog(String tag) {
+    public String getRandomPicFromBlog(String... tag) {
         List<PhotoPost> picturePosts = getPostsFromBlogs(tag);
 
         return getRandomUrlFromPosts(picturePosts);
     }
 
-    private String getRandomUrlFromPosts(List<PhotoPost> posts) {
-        if (posts == null) {
-            return "";
+    private List<PhotoPost> getPostsFromTags(String... tags) {
+        List<PhotoPost> posts = new ArrayList<PhotoPost>();
+
+        for (String tag : tags) {
+            posts.addAll(getPostsFromTag(tag));
         }
 
-        List<Photo> picturePostsPhotos = new ArrayList<Photo>();
-
-        for (Post post : posts) {
-            PhotoPost photoPost = (PhotoPost) post;
-            picturePostsPhotos.addAll(photoPost.getPhotos());
-        }
-
-        List<String> photoPostsUrls = new ArrayList<String>();
-
-        for (Photo photo : picturePostsPhotos) {
-
-            List<PhotoSize> photoSizes = photo.getSizes();
-            PhotoSize largestSize = null;
-
-            for (PhotoSize photoSize : photoSizes) {
-                if (largestSize == null || largestSize.getHeight() * largestSize.getWidth() < photoSize.getHeight() *
-                        photoSize.getWidth()) {
-                    largestSize = photoSize;
-                }
-            }
-
-            photoPostsUrls.add(largestSize.getUrl());
-        }
-
-        log.info("Size of list " + photoPostsUrls.size());
-        int randomIndex = new Random().nextInt(photoPostsUrls.size() - 1);
-
-        log.info("random Int " + randomIndex);
-        return photoPostsUrls.get(randomIndex);
+        return posts;
     }
 
-    private List<PhotoPost> getPostsFromTags(String... tags) {
-        String tag = tags[0];
-
+    private List<PhotoPost> getPostsFromTag(String tag) {
         List<Post> posts = jumblrClient.tagged(tag);
 
         if (posts.size() == 0) {
@@ -126,8 +98,16 @@ public class ToppleService implements InitializingBean {
     }
 
     private List<PhotoPost> getPostsFromBlogs(String... blogs) {
-        String blog = blogs[0];
+        List<PhotoPost> posts = new ArrayList<PhotoPost>();
 
+        for (String blog : blogs) {
+            posts.addAll(getPostsFromBlog(blog));
+        }
+
+        return posts;
+    }
+
+    private List<PhotoPost> getPostsFromBlog(String blog) {
         List<Post> posts = jumblrClient.blogPosts(blog);
 
         if (posts.size() == 0) {
@@ -162,6 +142,42 @@ public class ToppleService implements InitializingBean {
         }
 
         return picturePosts;
+    }
+
+    private String getRandomUrlFromPosts(List<PhotoPost> posts) {
+        if (posts == null) {
+            return "";
+        }
+
+        List<Photo> picturePostsPhotos = new ArrayList<Photo>();
+
+        for (Post post : posts) {
+            PhotoPost photoPost = (PhotoPost) post;
+            picturePostsPhotos.addAll(photoPost.getPhotos());
+        }
+
+        List<String> photoPostsUrls = new ArrayList<String>();
+
+        for (Photo photo : picturePostsPhotos) {
+
+            List<PhotoSize> photoSizes = photo.getSizes();
+            PhotoSize largestSize = null;
+
+            for (PhotoSize photoSize : photoSizes) {
+                if (largestSize == null || largestSize.getHeight() * largestSize.getWidth() < photoSize.getHeight() *
+                        photoSize.getWidth()) {
+                    largestSize = photoSize;
+                }
+            }
+
+            photoPostsUrls.add(largestSize.getUrl());
+        }
+
+        log.info("Size of list " + photoPostsUrls.size());
+        int randomIndex = new Random().nextInt(photoPostsUrls.size() - 1);
+
+        log.info("random Int " + randomIndex);
+        return photoPostsUrls.get(randomIndex);
     }
 
     public String getConsumerKey() {
